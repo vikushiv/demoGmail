@@ -10,7 +10,7 @@ import java.util.Properties;
 public class GmailService {
 
     private static final String USERNAME = "demoac1308@gmail.com";
-    private static final String PASSWORD = "esembdoudmroozfq"; // Use app password
+    private static final String PASSWORD = "XXXXXXXXXXXXX"; // Use app password
 
     private Session session;
     private Store store;
