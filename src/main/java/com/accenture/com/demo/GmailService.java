@@ -4,13 +4,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.mail.*;
+import java.io.IOException;
 import java.util.Properties;
 
 @Service
 public class GmailService {
 
     private static final String USERNAME = "demoac1308@gmail.com";
-    private static final String PASSWORD = "XXXXXXXXXXXXX"; // Use app password
+    private static final String PASSWORD = "XXXXXXXXXXXXXXX"; // Use app password
 
     private Session session;
     private Store store;
@@ -39,6 +40,34 @@ public class GmailService {
 
     @Scheduled(fixedDelay = 60000) // Check every minute
     public void checkEmails() {
+//        try {
+//            // Check if the store is connected
+//            if (!store.isConnected()) {
+//                connect(); // Reconnect if not connected
+//            }
+//
+//            Folder inbox = store.getFolder("INBOX");
+//            inbox.open(Folder.READ_ONLY);
+//
+//            Message[] messages = inbox.getMessages();
+//            for (Message message : messages) {
+//                String subject = message.getSubject();
+//                System.out.println(message.getContent());
+//                // Log the subject if it contains a specific keyword
+//                if (subject != null && subject.contains("startProcessInvoice")) {
+//                    System.out.println("Found email with subject: " + subject);
+//
+//                }
+//            }
+//
+//            inbox.close(false);
+//        } catch (MessagingException e) {
+//            e.printStackTrace();
+//            // Optionally reconnect on error
+//            connect();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
         try {
             // Check if the store is connected
             if (!store.isConnected()) {
@@ -49,22 +78,50 @@ public class GmailService {
             inbox.open(Folder.READ_ONLY);
 
             Message[] messages = inbox.getMessages();
+
             for (Message message : messages) {
-                String subject = message.getSubject();
+                try {
+                    String subject = message.getSubject();
+                    Object content = message.getContent();
 
-                // Log the subject if it contains a specific keyword
-                if (subject != null && subject.contains("startProcessInvoice")) {
-                    System.out.println("Found email with subject: " + subject);
+                    System.out.println("--------------------------------------------------");
+                    System.out.println("Email Subject: " + subject);
 
+                    // Handle different content types
+                    if (content instanceof String) {
+                        System.out.println("Email Content: " + content);
+                    } else if (content instanceof Multipart) {
+                        Multipart multipart = (Multipart) content;
+                        for (int i = 0; i < multipart.getCount(); i++) {
+                            BodyPart part = multipart.getBodyPart(i);
+                            System.out.println("Part " + (i + 1) + " Content-Type: " + part.getContentType());
+                            System.out.println("Content: " + part.getContent());
+                        }
+                    } else {
+                        System.out.println("Unknown content type: " + content.getClass().getName());
+                    }
+
+                    // Check for keyword in subject
+                    if (subject != null && subject.contains("startProcessInvoice")) {
+                        System.out.println("Found email with subject containing 'startProcessInvoice': " + subject);
+                    }
+
+                    System.out.println("--------------------------------------------------");
+
+                } catch (Exception e) {
+                    System.out.println("Error while processing individual message: " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
 
             inbox.close(false);
+
         } catch (MessagingException e) {
             e.printStackTrace();
             // Optionally reconnect on error
             connect();
         }
+
     }
 
     public void close() {
